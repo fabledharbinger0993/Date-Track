@@ -40,6 +40,12 @@ function Calendar({ events = [] }) {
     return events.filter((e) => e.date === dateStr);
   };
 
+  // Compute today's components once to avoid creating Date objects on every cell render
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayDate = today.getDate();
+
   return (
     <div className="calendar">
       <div className="calendar-header">
@@ -65,9 +71,9 @@ function Calendar({ events = [] }) {
           const dayEvents = getEventsForDay(day);
           const isToday =
             day &&
-            new Date().getFullYear() === year &&
-            new Date().getMonth() === month &&
-            new Date().getDate() === day;
+            todayYear === year &&
+            todayMonth === month &&
+            todayDate === day;
 
           return (
             <div

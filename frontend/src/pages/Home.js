@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Calendar from '../components/Calendar/Calendar';
+import './Home.css';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE =
+  process.env.REACT_APP_API_URL ||
+  `${window.location.origin}/api`;
 
 function Home() {
   const [events, setEvents] = useState([]);

@@ -79,7 +79,7 @@ Date-Track/
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/Date-Track.git
+git clone https://github.com/fabledharbinger0993/Date-Track.git
 cd Date-Track
 ```
 
@@ -191,4 +191,4 @@ Please follow existing code style and add tests where applicable.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License.

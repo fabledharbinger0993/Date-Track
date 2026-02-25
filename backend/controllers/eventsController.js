@@ -27,6 +27,8 @@ const getEvents = (req, res) => {
   res.json(events);
 };
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 const createEvent = (req, res) => {
   const { title, date, description } = req.body;
 
@@ -34,8 +36,12 @@ const createEvent = (req, res) => {
     return res.status(400).json({ success: false, message: 'title and date are required' });
   }
 
+  if (!DATE_RE.test(date) || isNaN(Date.parse(date))) {
+    return res.status(400).json({ success: false, message: 'date must be a valid YYYY-MM-DD string' });
+  }
+
   const newEvent = {
-    id: Date.now().toString(),
+    id: crypto.randomUUID(),
     title,
     date,
     description: description || '',
