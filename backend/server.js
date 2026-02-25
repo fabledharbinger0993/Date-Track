@@ -5,6 +5,7 @@ const session = require('express-session');
 
 const authRoutes = require('./routes/auth');
 const eventsRoutes = require('./routes/events');
+const integrationsRoutes = require('./routes/integrations');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +43,7 @@ app.use(
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/integrations', integrationsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
