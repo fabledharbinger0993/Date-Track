@@ -17,7 +17,12 @@ function Home() {
         setLoading(false);
       })
       .catch((err) => {
-        setError('Failed to load events. Is the backend running?');
+        console.error('Error fetching events:', err);
+        const message =
+          err?.response?.data?.message ||
+          err?.message ||
+          'Failed to load events. Is the backend running?';
+        setError(message);
         setLoading(false);
       });
   }, []);
