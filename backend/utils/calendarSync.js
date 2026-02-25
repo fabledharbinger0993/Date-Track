@@ -36,7 +36,7 @@ function mergeEvents(localEvents, remoteEvents) {
   const merged = [];
 
   for (const event of [...localEvents, ...remoteEvents]) {
-    const key = `${event.title}__${event.date}`;
+    const key = JSON.stringify({ title: event.title ?? '', date: event.date ?? '' });
     if (!seen.has(key)) {
       seen.add(key);
       merged.push(event);
