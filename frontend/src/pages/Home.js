@@ -44,7 +44,7 @@ function Home() {
       {loading && <p className="status-msg">Loading events...</p>}
       {error && <p className="status-msg status-msg--error">{error}</p>}
 
-      <Calendar events={events} />
+      {!loading && !error && <Calendar events={events} />}
 
       <section className="sync-section">
         <h2>Sync Calendar</h2>
