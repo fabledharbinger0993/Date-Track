@@ -1,0 +1,64 @@
+# Azure Static Web Apps + Container Apps deployment configuration
+
+# Project configuration
+name: date-track
+region: eastus
+
+# Frontend (Azure Static Web Apps)
+frontend:
+  type: static-web-app
+  output_location: frontend/build
+  api_location: backend
+  app_location: frontend
+  
+# Backend (Azure Container Apps)
+backend:
+  type: container-app
+  registry: datetrack.azurecr.io
+  image: date-track-api
+  port: 5000
+  cpu: 0.5
+  memory: 1.0Gi
+  scale:
+    minReplicas: 1
+    maxReplicas: 5
+    
+# Database (Azure Database for PostgreSQL)
+database:
+  type: postgresql-flexible
+  version: 15
+  sku: B_Standard_B1ms
+  storage: 32Gi
+  backup_retention: 7
+  
+# Cache (Azure Cache for Redis)
+cache:
+  type: redis
+  sku: Basic
+  capacity: 0
+  
+# AI (Azure OpenAI)
+ai:
+  type: openai
+  deployment: gpt-4
+  location: eastus
+  
+# Required Azure Services:
+# - Azure Static Web Apps (Frontend)
+# - Azure Container Apps (Backend API)
+# - Azure Database for PostgreSQL Flexible Server
+# - Azure Cache for Redis (optional)
+# - Azure OpenAI Service
+# - Azure Key Vault (for secrets)
+# - Azure Application Insights (monitoring)
+
+# Deployment commands:
+# 1. az login
+# 2. az group create --name date-track-rg --location eastus
+# 3. az acr create --resource-group date-track-rg --name datetrack --sku Basic
+# 4. docker build -t date-track-api .
+# 5. az acr login --name datetrack
+# 6. docker tag date-track-api datetrack.azurecr.io/date-track-api:latest
+# 7. docker push datetrack.azurecr.io/date-track-api:latest
+# 8. az containerapp create --name date-track-api --resource-group date-track-rg \
+#    --image datetrack.azurecr.io/date-track-api:latest --environment date-track-env

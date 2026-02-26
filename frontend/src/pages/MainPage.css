@@ -1,0 +1,155 @@
+/* Main Page Layout - 50% Calendar / 50% Navigation */
+
+.main-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-color, #ffffff);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Calendar Section - Top 50% */
+.main-page__calendar-section {
+  flex: 0 0 50%;
+  transition: flex 0.3s ease;
+  overflow: hidden;
+}
+
+.main-page__calendar-section.expanded {
+  flex: 1 1 100%;
+}
+
+/* Navigation Section - Bottom 50% */
+.main-page__nav-section {
+  flex: 0 0 50%;
+  background: var(--surface-color, #f9f9f9);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Loading Overlay */
+.main-page__loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  gap: 16px;
+}
+
+.main-page__loading p {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Spinner Animation */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .main-page {
+    background: var(--background-color, #0d0d0d);
+  }
+
+  .main-page__nav-section {
+    background: var(--surface-color, #1a1a1a);
+  }
+
+  .main-page__loading {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-page__nav-section {
+    padding: 16px;
+  }
+
+  .main-page__loading p {
+    font-size: 0.9rem;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-page__calendar-section {
+    flex: 0 0 45%;
+  }
+
+  .main-page__nav-section {
+    flex: 0 0 55%;
+    padding: 12px;
+  }
+
+  .main-page__loading p {
+    font-size: 0.85rem;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Landscape Mode on Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .main-page__calendar-section {
+    flex: 0 0 60%;
+  }
+
+  .main-page__nav-section {
+    flex: 0 0 40%;
+    padding: 12px;
+  }
+}
+
+/* Accessibility */
+.main-page:focus-within {
+  outline: none;
+}
+
+/* Prevent text selection during interactions */
+.main-page {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in specific areas if needed */
+.main-page input,
+.main-page textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}

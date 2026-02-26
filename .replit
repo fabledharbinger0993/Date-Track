@@ -1,0 +1,16 @@
+run = "npm run start:replit"
+entrypoint = "backend/server.js"
+
+[nix]
+channel = "stable-23_11"
+
+[deployment]
+run = ["sh", "-c", "npm run start:replit"]
+deploymentTarget = "cloudrun"
+
+[languages]
+[languages.javascript]
+pattern = "**/{*.js,*.jsx,*.ts,*.tsx}"
+
+[languages.javascript.languageServer]
+start = "typescript-language-server --stdio"
