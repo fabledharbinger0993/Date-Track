@@ -226,7 +226,8 @@ exports.autoProcess = async (req, res) => {
         id: e.id,
         subject: e.subject,
         from: e.from,
-        snippet: e.snippet
+        snippet: e.snippet,
+        importance: e.importance || 3
       })),
       calendarEvents: calendarEvents.map(e => ({
         id: e.id,
@@ -238,6 +239,192 @@ exports.autoProcess = async (req, res) => {
     console.error('Auto-process error:', error);
     res.status(500).json({ 
       error: 'Failed to auto-process inbox',
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Create importance labels (Gmail only)
+ * POST /api/email/labels/create
+ */
+exports.createImportanceLabels = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.session.userId || 'demo_user';
+    
+    const emailAgent = getEmailAgent();
+    const result = await emailAgent.createImportanceLabels(userId);
+    
+    res.json({
+      success: true,
+      labels: result.labels,
+      message: result.message
+    });
+  } catch (error) {
+    console.error('Create labels error:', error);
+    res.status(500).json({ 
+      error: 'Failed to create importance labels',
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Organize inbox by importance (scan and auto-label)
+ * POST /api/email/organize
+ * Body: { maxEmails: 50, unreadOnly: false }
+ */
+exports.organizeByImportance = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.session.userId || 'demo_user';
+    const { maxEmails = 50, unreadOnly = false } = req.body;
+    
+    const emailAgent = getEmailAgent();
+    const result = await emailAgent.organizeByImportance(userId, { maxEmails, unreadOnly });
+    
+    res.json({
+      success: true,
+      results: result.results,
+      message: result.message
+    });
+  } catch (error) {
+    console.error('Organize by importance error:', error);
+    res.status(500).json({ 
+      error: 'Failed to organize emails by importance',
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Apply importance label to specific email
+ * POST /api/email/label
+ * Body: { messageId, importance: 1-5 }
+ */
+exports.applyImportanceLabel = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.session.userId || 'demo_user';
+    const { messageId, importance, accountId } = req.body;
+    
+    if (!messageId || !importance || importance < 1 || importance > 5) {
+      return res.status(400).json({ 
+        error: 'messageId and importance (1-5) are required' 
+      });
+    }
+    
+    const emailAgent = getEmailAgent();
+    const result = await emailAgent.applyImportanceLabel(userId, messageId, importance, accountId);
+    
+    res.json({
+      success: true,
+      result,
+      message: `Applied importance level ${importance} to email`
+    });
+  } catch (error) {
+    console.error('Apply label error:', error);
+    res.status(500).json({ 
+      error: 'Failed to apply importance label',
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * List all connected email accounts
+ * GET /api/email/accounts
+ */
+exports.listAccounts = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.session.userId || 'demo_user';
+    
+    const emailAgent = getEmailAgent();
+    const accounts = emailAgent.listAccounts(userId);
+    
+    res.json({
+      success: true,
+      accounts,
+      totalAccounts: accounts.length,
+      maxAccounts: emailAgent.maxAccountsPerUser,
+      message: `Found ${accounts.length} connected email account(s)`
+    });
+  } catch (error) {
+    console.error('List accounts error:', error);
+    res.status(500).json({ 
+      error: 'Failed to list accounts',
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Disconnect specific email account
+ * DELETE /api/email/accounts/:accountId
+ */
+exports.disconnectAccount = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.session.userId || 'demo_user';
+    const { accountId } = req.params;
+    
+    if (!accountId) {
+      return res.status(400).json({ error: 'accountId is required' });
+    }
+    
+    const emailAgent = getEmailAgent();
+    const success = emailAgent.disconnectAccount(userId, accountId);
+    
+    if (!success) {
+      return res.status(404).json({ 
+        error: 'Account not found',
+        accountId 
+      });
+    }
+    
+    res.json({
+      success: true,
+      accountId,
+      message: `Disconnected account: ${accountId}`
+    });
+  } catch (error) {
+    console.error('Disconnect account error:', error);
+    res.status(500).json({ 
+      error: 'Failed to disconnect account',
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Set primary email account
+ * POST /api/email/accounts/:accountId/primary
+ */
+exports.setPrimaryAccount = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.session.userId || 'demo_user';
+    const { accountId } = req.params;
+    
+    if (!accountId) {
+      return res.status(400).json({ error: 'accountId is required' });
+    }
+    
+    const emailAgent = getEmailAgent();
+    const success = emailAgent.setPrimaryAccount(userId, accountId);
+    
+    if (!success) {
+      return res.status(404).json({ 
+        error: 'Account not found',
+        accountId 
+      });
+    }
+    
+    res.json({
+      success: true,
+      accountId,
+      message: `Set primary account: ${accountId}`
+    });
+  } catch (error) {
+    console.error('Set primary account error:', error);
+    res.status(500).json({ 
+      error: 'Failed to set primary account',
       details: error.message 
     });
   }
