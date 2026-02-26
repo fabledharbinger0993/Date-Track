@@ -146,17 +146,22 @@ const deleteEvent = (req, res) => {
 };
 
 const { parseEventText, validateEvent } = require('../utils/eventParser');
+const { getInstance: getOllamaService } = require('../services/ollamaService');
 
-const parseEvent = (req, res) => {
-  const { text } = req.body;
+const parseEvent = async (req, res) => {
+  const { text, useAI = true } = req.body;
 
   if (!text || !text.trim()) {
     return res.status(400).json({ success: false, message: 'text is required' });
   }
 
   try {
-    // Parse the natural language input
-    const parsedEvent = parseEventText(text);
+    const ollamaService = getOllamaService();
+    
+    // Parse using AI if available and enabled, otherwise use basic parser
+    const parsedEvent = useAI && ollamaService.enabled
+      ? await ollamaService.parseEvent(text)
+      : parseEventText(text);
     
     // Validate against existing events
     const validation = validateEvent(parsedEvent, events);
@@ -165,6 +170,8 @@ const parseEvent = (req, res) => {
       success: true,
       event: parsedEvent,
       validation,
+      aiEnabled: ollamaService.enabled,
+      aiModel: ollamaService.model,
     });
   } catch (error) {
     console.error('Parse error:', error);

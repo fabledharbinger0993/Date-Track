@@ -1,6 +1,28 @@
-# Date-Track
+# Calinvite 🗓️✉️
 
-> A full-stack calendar and event tracking application with multi-provider OAuth calendar sync support (Google, Microsoft, Apple).
+> **AI-powered calendar event management with offline-first architecture**
+> 
+> Create events naturally with voice or text. Smart conflict detection, calendar sync, and Facebook/Canva integrations - powered by local AI (Ollama).
+
+**Key Features:**
+- 🎤 **Voice-to-text** event creation
+- 🤖 **Local AI parsing** (Ollama) - free, private, offline
+- ⚡ **Smart validation** - detects conflicts & unusual times
+- 🔄 **Multi-calendar sync** - Google, Microsoft, Apple, Facebook, Yahoo
+- 🎨 **Canva integration** - attach designs to events
+- 📴 **Offline-first** - works without internet
+- 💰 **Zero cost** - no cloud APIs needed
+
+---
+
+## 🚀 Quick Deploy
+
+**Deploy to Replit (2 minutes):**
+1. Import from GitHub → `https://github.com/yourusername/Date-Track`
+2. Click "Run"
+3. Done! ✨
+
+[📖 Full Replit Guide](REPLIT_DEPLOY.md) | [💻 Local Setup](#getting-started) | [📴 Offline-First Guide](OFFLINE_FIRST.md)
 
 ---
 
@@ -76,26 +98,59 @@ Date-Track/
 
 ## Getting Started
 
-### Clone the Repository
+### 1. Install Ollama (AI Engine)
+
+**Windows:**
+Download from [ollama.com/download/windows](https://ollama.com/download/windows)
+
+**Mac:**
+```bash
+brew install ollama
+```
+
+**Linux:**
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+### 2. Download AI Model
+
+```bash
+# Recommended: Phi-3 (2.3GB) - best balance of speed/accuracy
+ollama pull phi
+
+# OR for ultra-lightweight (637MB)
+ollama pull tinyllama
+```
+
+### 3. Start Ollama Server
+
+```bash
+ollama serve
+```
+
+Leave this running in a terminal.
+
+### 4. Clone the Repository
 
 ```bash
 git clone https://github.com/fabledharbinger0993/Date-Track.git
 cd Date-Track
 ```
 
-### Backend Setup
+### 5. Backend Setup
 
 ```bash
 cd backend
 npm install
 cp .env.example .env
-# Edit .env with your credentials
-npm run dev
+# Edit .env if needed (defaults work for local dev)
+npm start
 ```
 
 The backend will start on **http://localhost:5000**.
 
-### Frontend Setup
+### 6. Frontend Setup
 
 Open a new terminal:
 
@@ -106,6 +161,13 @@ npm start
 ```
 
 The frontend will open at **http://localhost:3000**.
+
+### 7. Test It Out!
+
+- Try voice input: Click microphone, say "Dentist tomorrow at 2pm"
+- Try text input: Type "Team meeting Friday at 3pm"
+- See AI parse it instantly!
+- **Turn off WiFi** - everything still works offline! 🎉
 
 ---
 
