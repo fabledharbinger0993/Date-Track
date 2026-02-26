@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MainPage.css';
 import Calendar from '../components/Calendar/Calendar';
 import BottomNav from '../components/Navigation/BottomNav';
@@ -7,13 +8,8 @@ import BottomNav from '../components/Navigation/BottomNav';
  * Main Page: 50% Calendar (top) + 50% Navigation Buttons (bottom)
  * Per UI specification - expandable calendar with 6-button navigation
  */
-function MainPage({ 
-  onNavigateToEventSetup,
-  onNavigateToDesign,
-  onNavigateToNotes,
-  onNavigateToSettings,
-  onNavigateToEmailLink
-}) {
+function MainPage({ onOpenEmailModal }) {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [notes, setNotes] = useState({});
   const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
@@ -55,9 +51,7 @@ function MainPage({
 
   const handleDayClick = (dateStr, day) => {
     // Navigate to Event Setup page for the selected date
-    if (onNavigateToEventSetup) {
-      onNavigateToEventSetup(dateStr);
-    }
+    navigate(`/event/new/${dateStr}`);
   };
 
   const handleToggleExpand = () => {
@@ -75,37 +69,30 @@ function MainPage({
   const handleAddEvent = () => {
     // Navigate to Event Setup page for today
     const today = new Date().toISOString().split('T')[0];
-    if (onNavigateToEventSetup) {
-      onNavigateToEventSetup(today);
-    }
+    navigate(`/event/new/${today}`);
   };
 
   const handleLinkEmail = () => {
-    // Navigate to Email Link modal/page
-    if (onNavigateToEmailLink) {
-      onNavigateToEmailLink();
+    // Open Email Link modal
+    if (onOpenEmailModal) {
+      onOpenEmailModal();
     }
   };
 
   const handleNotes = () => {
     // Navigate to Notes page
-    if (onNavigateToNotes) {
-      onNavigateToNotes();
-    }
+    navigate('/notes');
   };
 
   const handleSettings = () => {
     // Navigate to Settings page
-    if (onNavigateToSettings) {
-      onNavigateToSettings();
-    }
+    navigate('/settings');
   };
 
   const handleDesign = () => {
-    // Navigate to Design page
-    if (onNavigateToDesign) {
-      onNavigateToDesign();
-    }
+    // Navigate to Design page (for latest event, or show a selector)
+    // For now, go to event page
+    navigate('/event');
   };
 
   return (

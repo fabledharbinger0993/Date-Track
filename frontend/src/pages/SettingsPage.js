@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './SettingsPage.css';
 
 /**
@@ -7,7 +8,8 @@ import './SettingsPage.css';
  * - Font: Comic Sans, Times New Roman, Instrument Sans
  * - Notifications: Volume slider (0-100%)
  */
-function SettingsPage({ onBack }) {
+function SettingsPage() {
+  const navigate = useNavigate();
   const [theme, setTheme] = useState('light');
   const [defaultFont, setDefaultFont] = useState('instrument-sans');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -103,7 +105,7 @@ function SettingsPage({ onBack }) {
     <div className="settings-page">
       {/* Header */}
       <div className="settings-page__header">
-        <button className="settings-page__back-btn" onClick={onBack} aria-label="Back">
+        <button className="settings-page__back-btn" onClick={() => navigate('/calendar')} aria-label="Back">
           ← Back
         </button>
         <h1 className="settings-page__title">⚙️ Settings</h1>

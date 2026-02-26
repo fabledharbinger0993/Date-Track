@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import './NotesPage.css';
 
 /**
@@ -6,7 +7,9 @@ import './NotesPage.css';
  * Supports 3 fonts: Comic Sans MS, Times New Roman, Instrument Sans
  * Post'it: Attach notes to calendar dates without creating events
  */
-function NotesPage({ onBack }) {
+function NotesPage() {
+  const navigate = useNavigate();
+  const { noteId } = useParams();
   const [notes, setNotes] = useState([]);
   const [currentNote, setCurrentNote] = useState({ id: null, title: '', content: '', font: 'instrument-sans' });
   const [selectedFont, setSelectedFont] = useState('instrument-sans');
@@ -17,6 +20,16 @@ function NotesPage({ onBack }) {
   useEffect(() => {
     loadNotes();
   }, []);
+
+  useEffect(() => {
+    // Load specific note if noteId is provided
+    if (noteId && notes.length > 0) {
+      const note = notes.find((n) => n.id === parseInt(noteId));
+      if (note) {
+        handleEditNote(note);
+      }
+    }
+  }, [noteId, notes]);
 
   const loadNotes = async () => {
     try {
@@ -116,7 +129,7 @@ function NotesPage({ onBack }) {
     <div className="notes-page">
       {/* Header */}
       <div className="notes-page__header">
-        <button className="notes-page__back-btn" onClick={onBack} aria-label="Back">
+        <button className="notes-page__back-btn" onClick={() => navigate('/calendar')} aria-label="Back">
           ← Back
         </button>
         <h1 className="notes-page__title">📝 Notes</h1>

@@ -264,7 +264,7 @@
 
 .volume-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  appearance: none;
+  appearance: none; /* Already included */
   width: 20px;
   height: 20px;
   border-radius: 50%;
