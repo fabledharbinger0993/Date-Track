@@ -260,6 +260,7 @@
   background: linear-gradient(90deg, #e0e0e0 0%, #4A90E2 100%);
   outline: none;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 .volume-slider::-webkit-slider-thumb {

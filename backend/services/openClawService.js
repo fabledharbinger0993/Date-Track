@@ -83,24 +83,6 @@ Return only the JSON object:`;
       throw error;
     }
   }
-      const jsonMatch = response.text.match(/\{[\s\S]*?\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          ...parsed,
-          aiParsed: true,
-          engine: 'openclaw',
-          confidence: 'high'
-        };
-      }
-      
-      throw new Error('No valid JSON in response');
-      
-    } catch (error) {
-      console.error('OpenClaw parsing error:', error.message);
-      throw error;
-    }
-  }
   
   /**
    * Scan events for conflicts and patterns
