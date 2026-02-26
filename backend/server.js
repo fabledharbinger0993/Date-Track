@@ -9,6 +9,7 @@ const eventsRoutes = require('./routes/events');
 const integrationsRoutes = require('./routes/integrations');
 const aiRoutes = require('./routes/ai');
 const emailRoutes = require('./routes/email');
+const { getInstance: getMCPService } = require('./services/mcpService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,6 +51,16 @@ app.use('/api/integrations', integrationsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/email', emailRoutes);
 
+// MCP status endpoint
+app.get('/api/mcp/status', (req, res) => {
+  const mcpService = getMCPService();
+  res.json({
+    status: 'ok',
+    servers: mcpService.getStatus(),
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -59,6 +70,28 @@ app.get('/health', (req, res) => {
 if (process.env.NODE_ENV === 'production' || process.env.REPLIT) {
   const frontendBuildPath = path.join(__dirname, '../frontend/build');
   
+// Initialize MCP servers
+const mcpService = getMCPService();
+mcpService.initialize().catch(err => {
+  console.error('Failed to initialize MCP servers:', err.message);
+});
+
+// Graceful shutdown
+const gracefulShutdown = async (signal) => {
+  console.log(`\n${signal} received, shutting down gracefully...`);
+  
+  try {
+    await mcpService.shutdown();
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
   app.use(express.static(frontendBuildPath));
   
   // Handle React Router - send all non-API requests to index.html
