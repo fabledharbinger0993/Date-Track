@@ -1,6 +1,10 @@
 /**
  * Unified AI Service - Calinvite
- * Tries local AI engines in order: OpenClaw → Ollama → chrono-node fallback
+ * Tries local AI engines in order: Ollama (primary) → OpenClaw (optional) → chrono-node (fallback)
+ * 
+ * Ollama is the recommended engine with 7 models and advanced features.
+ * OpenClaw is optional and will be used if available.
+ * chrono-node is the reliable fallback that always works.
  */
 
 const { getInstance: getOpenClawService } = require('./openClawService');
@@ -19,44 +23,49 @@ class CalinviteAI {
   detectEngines() {
     const engines = [];
     
-    if (this.openClaw.isAvailable()) {
-      engines.push('OpenClaw');
-    }
     if (this.ollama.enabled) {
-      engines.push('Ollama');
+      engines.push('Ollama (primary)');
+    }
+    if (this.openClaw.isAvailable()) {
+      engines.push('OpenClaw (optional)');
     }
     engines.push('chrono-node (fallback)');
     
-    console.log(`🤖 AI Engines available: ${engines.join(' → ')}`);
+    console.log(`🤖 AI Engines: ${engines.join(' → ')}`);
+    
+    if (!this.ollama.enabled && !this.openClaw.isAvailable()) {
+      console.warn('⚠️  No AI engines available - using chrono-node only');
+      console.warn('   Install Ollama for better parsing: https://ollama.com');
+    }
   }
   
   /**
-   * Parse event - tries engines in order
+   * Parse event - tries engines in order (Ollama preferred)
    * @param {string} text - Natural language input
    * @returns {Promise<Object>} - Parsed event
    */
   async parseEvent(text) {
-    // Try OpenClaw first (lightweight, fast)
-    if (this.openClaw.isAvailable()) {
-      try {
-        const result = await this.openClaw.parseEvent(text);
-        return result;
-      } catch (error) {
-        console.warn('OpenClaw parse failed, trying Ollama...');
-      }
-    }
-    
-    // Try Ollama second (more powerful, slower)
+    // Try Ollama first (most reliable, feature-rich)
     if (this.ollama.enabled) {
       try {
         const result = await this.ollama.parseEvent(text);
         return result;
       } catch (error) {
-        console.warn('Ollama parse failed, using fallback...');
+        console.warn('Ollama parse failed, trying OpenClaw...');
       }
     }
     
-    // Fallback to chrono-node (always works, less accurate)
+    // Try OpenClaw second (optional, lightweight)
+    if (this.openClaw.isAvailable()) {
+      try {
+        const result = await this.openClaw.parseEvent(text);
+        return result;
+      } catch (error) {
+        console.warn('OpenClaw parse failed, using fallback...');
+      }
+    }
+    
+    // Fallback to chrono-node (always works, basic parsing)
     console.log('Using chrono-node fallback parser');
     return eventParser.parseEventText(text);
   }
@@ -67,19 +76,21 @@ class CalinviteAI {
    * @returns {Promise<Object>} - Analysis
    */
   async scanEvents(events) {
-    if (this.openClaw.isAvailable()) {
-      try {
-        return await this.openClaw.scanEvents(events);
-      } catch (error) {
-        console.warn('OpenClaw scan failed, trying Ollama...');
-      }
-    }
-    
+    // Try Ollama first (primary engine)
     if (this.ollama.enabled) {
       try {
         return await this.ollama.scanEvents(events);
       } catch (error) {
-        console.warn('Ollama scan failed, using fallback...');
+        console.warn('Ollama scan failed, trying OpenClaw...');
+      }
+    }
+    
+    // Try OpenClaw (optional engine)
+    if (this.openClaw.isAvailable()) {
+      try {
+        return await this.openClaw.scanEvents(events);
+      } catch (error) {
+        console.warn('OpenClaw scan failed, using fallback...');
       }
     }
     
@@ -93,22 +104,23 @@ class CalinviteAI {
    * @returns {Promise<Object>} - Organized categories
    */
   async organizeEvents(events) {
-    if (this.openClaw.isAvailable()) {
-      try {
-        // OpenClaw doesn't have organize method yet, try Ollama
-        if (this.ollama.enabled) {
-          return await this.ollama.organizeEvents(events);
-        }
-      } catch (error) {
-        console.warn('Organization failed, using fallback...');
-      }
-    }
-    
+    // Try Ollama first (primary engine)
     if (this.ollama.enabled) {
       try {
         return await this.ollama.organizeEvents(events);
       } catch (error) {
-        console.warn('Ollama organize failed, using fallback...');
+        console.warn('Ollama organize failed, trying OpenClaw...');
+      }
+    }
+    
+    // Try OpenClaw (optional engine) - may not have organize method yet
+    if (this.openClaw.isAvailable()) {
+      try {
+        if (this.openClaw.organizeEvents) {
+          return await this.openClaw.organizeEvents(events);
+        }
+      } catch (error) {
+        console.warn('OpenClaw organize failed, using fallback...');
       }
     }
     
@@ -122,19 +134,21 @@ class CalinviteAI {
    * @returns {Promise<string>} - AI reply
    */
   async chat(message, context = {}) {
-    if (this.openClaw.isAvailable()) {
-      try {
-        return await this.openClaw.chat(message, context);
-      } catch (error) {
-        console.warn('OpenClaw chat failed, trying Ollama...');
-      }
-    }
-    
+    // Try Ollama first (primary engine)
     if (this.ollama.enabled) {
       try {
         return await this.ollama.generateReply(message, context);
       } catch (error) {
-        console.warn('Ollama chat failed, using fallback...');
+        console.warn('Ollama chat failed, trying OpenClaw...');
+      }
+    }
+    
+    // Try OpenClaw (optional engine)
+    if (this.openClaw.isAvailable()) {
+      try {
+        return await this.openClaw.chat(message, context);
+      } catch (error) {
+        console.warn('OpenClaw chat failed, using fallback...');
       }
     }
     
@@ -152,11 +166,7 @@ class CalinviteAI {
       fallback: 'chrono-node'
     };
     
-    if (this.openClaw.isAvailable()) {
-      status.engines.push(this.openClaw.getStatus());
-      status.primary = 'OpenClaw';
-    }
-    
+    // Ollama is primary engine
     if (this.ollama.enabled) {
       status.engines.push({
         enabled: true,
@@ -165,9 +175,15 @@ class CalinviteAI {
         local: true,
         cost: 0
       });
+      status.primary = 'Ollama';
+    }
+    
+    // OpenClaw is optional secondary engine
+    if (this.openClaw.isAvailable()) {
+      status.engines.push(this.openClaw.getStatus());
       
       if (!status.primary) {
-        status.primary = 'Ollama';
+        status.primary = 'OpenClaw';
       }
     }
     

@@ -1,27 +1,37 @@
 /**
  * OpenClaw AI Service - Local, lightweight AI for event parsing
- * OpenClaw is a small local LLM that runs without heavy infrastructure
+ * OpenClaw runs as a separate server process and provides HTTP API
  */
+
+const axios = require('axios');
 
 class OpenClawService {
   constructor() {
+    this.baseUrl = process.env.OPENCLAW_URL || 'http://localhost:7777';
     this.enabled = false;
-    this.openClaw = null;
     
-    // Try to load OpenClaw
-    this.initialize();
+    // Check if OpenClaw server is running
+    this.checkAvailability();
   }
   
-  async initialize() {
+  async checkAvailability() {
     try {
-      // Try to import OpenClaw (adjust based on actual module name)
-      // Common patterns: 'openclaw', '@openclaw/core', 'openclaw-js'
-      this.openClaw = require('openclaw');
-      this.enabled = true;
-      console.log('✓ OpenClaw AI initialized (local, lightweight)');
+      // Ping OpenClaw server health endpoint
+      const response = await axios.get(`${this.baseUrl}/health`, {
+        timeout: 2000
+      });
+      
+      if (response.status === 200) {
+        this.enabled = true;
+        console.log(`✓ OpenClaw AI server running at ${this.baseUrl}`);
+        console.log('  Fast, lightweight local AI for event parsing');
+      }
     } catch (error) {
-      console.warn('⚠ OpenClaw not found. Install with: npm install openclaw');
+      console.warn('⚠ OpenClaw server not running.');
+      console.warn(`  Start server: wsl ~/openclaw/start.sh`);
+      console.warn('  Or set OPENCLAW_URL in .env');
       console.warn('  Falling back to Ollama or chrono-node');
+      this.enabled = false;
     }
   }
   
@@ -31,23 +41,48 @@ class OpenClawService {
    * @returns {Promise<Object>} - Parsed event data
    */
   async parseEvent(text) {
-    if (!this.enabled || !this.openClaw) {
+    if (!this.enabled) {
       throw new Error('OpenClaw not available');
     }
     
     try {
-      // OpenClaw API call - adjust based on actual API
-      const prompt = `Parse this into a calendar event JSON with fields: title, date (YYYY-MM-DD), time (HH:MM), location, description.\n\nText: "${text}"\n\nJSON:`;
+      const prompt = `Parse this into a calendar event JSON with fields: title, date (YYYY-MM-DD), time (HH:MM), location, description.
+
+Text: "${text}"
+
+Return only the JSON object:`;
       
-      // Assuming OpenClaw has a generate or complete method
-      const response = await this.openClaw.generate({
+      // Call OpenClaw API - adjust endpoint based on actual API
+      const response = await axios.post(`${this.baseUrl}/api/generate`, {
         prompt: prompt,
         max_tokens: 150,
         temperature: 0.3,
-        stop: ['\n\n', 'User:', 'Text:']
+        stop: ['\n\n']
+      }, {
+        timeout: 10000
       });
       
       // Extract JSON from response
+      const result = response.data.text || response.data.response || response.data;
+      const jsonMatch = typeof result === 'string' ? result.match(/\{[\s\S]*\}/) : null;
+      
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          ...parsed,
+          aiParsed: true,
+          engine: 'openclaw',
+          confidence: 'medium'
+        };
+      }
+      
+      throw new Error('No valid JSON in OpenClaw response');
+      
+    } catch (error) {
+      console.error('OpenClaw parsing failed:', error.message);
+      throw error;
+    }
+  }
       const jsonMatch = response.text.match(/\{[\s\S]*?\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -73,7 +108,7 @@ class OpenClawService {
    * @returns {Promise<Object>} - Analysis
    */
   async scanEvents(events) {
-    if (!this.enabled || !this.openClaw) {
+    if (!this.enabled) {
       throw new Error('OpenClaw not available');
     }
     
@@ -84,14 +119,18 @@ class OpenClawService {
       
       const prompt = `Analyze these calendar events. List any conflicts (overlapping times), unusual patterns, and give 2-3 suggestions.\n\nEvents:\n${eventSummary}\n\nAnalysis:`;
       
-      const response = await this.openClaw.generate({
+      const response = await axios.post(`${this.baseUrl}/api/generate`, {
         prompt: prompt,
         max_tokens: 300,
         temperature: 0.5
+      }, {
+        timeout: 15000
       });
       
+      const result = response.data.text || response.data.response || response.data;
+      
       return {
-        analysis: response.text.trim(),
+        analysis: typeof result === 'string' ? result.trim() : JSON.stringify(result),
         scanned: events.length,
         engine: 'openclaw',
         aiGenerated: true
@@ -110,7 +149,7 @@ class OpenClawService {
    * @returns {Promise<string>} - AI reply
    */
   async chat(message, context = {}) {
-    if (!this.enabled || !this.openClaw) {
+    if (!this.enabled) {
       throw new Error('OpenClaw not available');
     }
     
@@ -126,14 +165,17 @@ class OpenClawService {
       
       const prompt = `${contextStr}\n\nUser: ${message}\nAssistant:`;
       
-      const response = await this.openClaw.generate({
+      const response = await axios.post(`${this.baseUrl}/api/generate`, {
         prompt: prompt,
         max_tokens: 100,
         temperature: 0.7,
         stop: ['\nUser:', '\n\n']
+      }, {
+        timeout: 10000
       });
       
-      return response.text.trim();
+      const result = response.data.text || response.data.response || response.data;
+      return typeof result === 'string' ? result.trim() : JSON.stringify(result);
       
     } catch (error) {
       console.error('OpenClaw chat error:', error.message);
@@ -146,7 +188,7 @@ class OpenClawService {
    * @returns {boolean}
    */
   isAvailable() {
-    return this.enabled && this.openClaw !== null;
+    return this.enabled;
   }
   
   /**
@@ -157,9 +199,10 @@ class OpenClawService {
     return {
       enabled: this.enabled,
       engine: 'OpenClaw',
-      version: this.openClaw?.version || 'unknown',
+      url: this.baseUrl,
       local: true,
-      cost: 0
+      cost: 0,
+      note: 'Optional - Falls back to Ollama automatically'
     };
   }
 }
